@@ -1,12 +1,20 @@
 import alchemy from 'alchemy';
-import { SvelteKit } from 'alchemy/cloudflare';
+import { D1Database, SvelteKit } from 'alchemy/cloudflare';
 
 import packageJson from './package.json';
 
 const app = await alchemy(packageJson.name);
 
+const database = await D1Database(`${packageJson.name}-db`, {
+	name: `${packageJson.name}-db`,
+	migrationsDir: './migrations',
+});
+
 export const worker = await SvelteKit('website', {
-	name: `${packageJson.name}-website-islamzaoui`
+	name: `${packageJson.name}-website-islamzaoui`,
+	bindings: {
+		DB: database,
+	},
 });
 
 // eslint-disable-next-line no-console

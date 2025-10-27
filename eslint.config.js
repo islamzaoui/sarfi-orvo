@@ -6,6 +6,7 @@ export default antfu(
 		type: 'app',
 		svelte: true,
 		stylistic: false,
+		ignores: ['migrations/**'],
 		rules: {
 			'no-console': ['warn'],
 			'antfu/no-top-level-await': ['off'],
