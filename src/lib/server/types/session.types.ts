@@ -12,3 +12,7 @@ export interface ISessionWithToken extends ISession {
 export interface ISessionWithUser extends Omit<ISession, 'userId'> {
 	user: IUser;
 }
+
+export interface Session extends Omit<ISession, 'userId' | 'secretHash'> {
+	user: Omit<IUser, 'passwordHash'>;
+}

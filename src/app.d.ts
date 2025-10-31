@@ -1,6 +1,7 @@
 import type { InjectionToken } from 'tsyringe';
 
 import type { ServiceErrorMap } from '@/server/errors';
+import type { Session } from '@/server/types/session.types';
 
 declare global {
 	namespace App {
@@ -11,7 +12,14 @@ declare global {
 		interface Locals {
 			useService: <T>(token: InjectionToken<T>) => T;
 		}
-		// interface PageData {}
+		interface PageData {
+			flash?: {
+				type: 'error' | 'success';
+				message: string;
+				description?: string;
+			};
+			session: Session | null;
+		}
 		// interface PageState {}
 		interface Platform {
 			env: Env;

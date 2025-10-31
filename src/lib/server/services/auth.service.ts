@@ -6,11 +6,12 @@ import { dev } from '$app/environment';
 import { getRequestEvent } from '$app/server';
 import { JWT_SECRET } from '$env/static/private';
 import { jwtVerify, SignJWT } from 'jose';
+import { redirect } from 'sveltekit-flash-message/server';
 
 import type { LoginBody, RegisterBody } from '@/schemas/auth.schema';
 import type { ISessionRepo } from '@/server/repos/session.repo';
 import type { IUserRepo } from '@/server/repos/user.repo';
-import type { ISessionWithUser } from '@/server/types/session.types';
+import type { ISessionWithUser, Session } from '@/server/types/session.types';
 
 import { createServiceIdentifier, inject, Scoped, useService } from '@/server/di';
 import { SessionRepoId } from '@/server/repos/session.repo';
@@ -22,6 +23,7 @@ export interface IAuthService {
 	register: (body: RegisterBody, invalid: Invalid<RegisterBody>) => Promise<void>;
 	login: (body: LoginBody, invalid: Invalid<LoginBody>) => Promise<void>;
 	verifySession: () => Promise<void>;
+	getClientSession: () => Session | null;
 	logout: () => Promise<void>;
 }
 
@@ -176,25 +178,29 @@ export class AuthService implements IAuthService {
 	}
 
 	async register(body: RegisterBody, invalid: Invalid<RegisterBody>): Promise<void> {
+		const event = getRequestEvent();
 		if (this.session) {
-			invalid('user is already logged in');
-			return;
+			redirect(
+				'/',
+				{
+					type: 'error',
+					message: 'You are already logged in.',
+				},
+				event
+			);
 		}
 
 		if (await this.isEmailTaken(body.email)) {
-			invalid.email('Email is already taken.');
-			return;
+			invalid(invalid.email('Email is already taken.'));
 		}
 
 		if (await this.isPasswordWeak(body.password)) {
-			invalid.password('Password is too weak.');
-			return;
+			invalid(invalid.password('Password is too weak.'));
 		}
 
 		const existingUser = await this.userRepo.getUserByEmail(body.email);
 		if (existingUser) {
-			invalid.email('Email is already taken.');
-			return;
+			invalid(invalid.email('Email is already taken.'));
 		}
 
 		const passwordHash = await this.password.hash(body.password);
@@ -212,25 +218,33 @@ export class AuthService implements IAuthService {
 		});
 		this.cookie.set('session-jwt', jwt);
 
-		this._session = {
-			id: session.id,
-			user: newUser,
-			secretHash: session.secretHash,
-			createdAt: session.createdAt,
-			lastVerifiedAt: session.lastVerifiedAt,
-		};
+		redirect(
+			'/',
+			{
+				type: 'success',
+				message: 'You have successfully Registered.',
+				description: `Welcome to Sarfi, ${newUser.email}!`,
+			},
+			event
+		);
 	}
 
 	async login(body: LoginBody, invalid: Invalid<LoginBody>): Promise<void> {
+		const event = getRequestEvent();
 		if (this.session) {
-			invalid('user is already logged in');
-			return;
+			redirect(
+				'/',
+				{
+					type: 'error',
+					message: 'You are already logged in.',
+				},
+				event
+			);
 		}
 
 		const existingUser = await this.userRepo.getUserByEmail(body.email);
 		if (!existingUser) {
-			invalid.email('Invalid credentials.');
-			return;
+			invalid(invalid.email('Invalid credentials.'));
 		}
 
 		const isPasswordValid = await this.password.verify(
@@ -238,7 +252,7 @@ export class AuthService implements IAuthService {
 			body.password
 		);
 		if (!isPasswordValid) {
-			invalid.email('Invalid credentials.');
+			invalid(invalid.password('Invalid credentials.'));
 		}
 
 		const { token, ...session } = await this.sessionRepo.createSession(existingUser.id);
@@ -250,13 +264,15 @@ export class AuthService implements IAuthService {
 		});
 		this.cookie.set('session-jwt', jwt);
 
-		this._session = {
-			id: session.id,
-			user: existingUser,
-			secretHash: session.secretHash,
-			createdAt: session.createdAt,
-			lastVerifiedAt: session.lastVerifiedAt,
-		};
+		redirect(
+			'/',
+			{
+				type: 'success',
+				message: 'You have successfully logged in.',
+				description: `Welcome back, ${existingUser.email}!`,
+			},
+			event
+		);
 	}
 
 	async verifySession(): Promise<void> {
@@ -281,7 +297,26 @@ export class AuthService implements IAuthService {
 		return this._session;
 	}
 
+	getClientSession(): Session | null {
+		if (!this._session) {
+			return null;
+		}
+
+		return {
+			id: this._session.id,
+			user: {
+				id: this._session.user.id,
+				email: this._session.user.email,
+				createdAt: this._session.user.createdAt,
+				updatedAt: this._session.user.updatedAt,
+			},
+			createdAt: this._session.createdAt,
+			lastVerifiedAt: this._session.lastVerifiedAt,
+		};
+	}
+
 	async logout(): Promise<void> {
+		const event = getRequestEvent();
 		if (!this.session) {
 			return;
 		}
@@ -291,6 +326,13 @@ export class AuthService implements IAuthService {
 		this.cookie.delete('session-token');
 		this.cookie.delete('session-jwt');
 
-		this._session = null;
+		redirect(
+			'/',
+			{
+				type: 'success',
+				message: 'You have successfully logged out.',
+			},
+			event
+		);
 	}
 }

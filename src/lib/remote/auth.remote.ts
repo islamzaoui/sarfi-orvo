@@ -1,4 +1,4 @@
-import { command, form, query } from '$app/server';
+import { form, query } from '$app/server';
 
 import { loginSchema, registerSchema } from '@/schemas/auth.schema';
 import { useService } from '@/server/di';
@@ -14,6 +14,6 @@ export const loginForm = form(
 	async (data, invalid) => await useService(AuthServiceId).login(data, invalid)
 );
 
-export const getSession = query(async () => useService(AuthServiceId).session);
+export const getSessionQuery = query(async () => useService(AuthServiceId).getClientSession());
 
-export const logoutCommand = command(async () => await useService(AuthServiceId).logout());
+export const logoutForm = form(async () => await useService(AuthServiceId).logout());
