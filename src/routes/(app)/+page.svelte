@@ -9,10 +9,6 @@
 <h1>Welcome to SvelteKit</h1>
 <p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
 <pre>{JSON.stringify(session.value, null, 2)}</pre>
-<form
-	{...logoutForm.enhance(() => {
-		session.set(null);
-	})}
->	
+<form {...logoutForm}>
 	<Button {...logoutForm.buttonProps}>Logout</Button>
 </form>

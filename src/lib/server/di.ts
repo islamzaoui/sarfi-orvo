@@ -1,97 +1,121 @@
 import 'reflect-metadata';
-
 import type { Handle } from '@sveltejs/kit';
-import type { DependencyContainer, InjectionToken } from 'tsyringe';
+import type { InjectionToken } from 'tsyringe';
 
 import { getRequestEvent } from '$app/server';
-import { container, inject, injectable } from 'tsyringe';
+import { container, injectable, Lifecycle } from 'tsyringe';
 
-export type Constructor<T = unknown> = new (...args: any[]) => T;
+export type Constructor = new (...args: any[]) => any;
 
-export function createServiceIdentifier<T>(): InjectionToken<T> {
-	return Symbol('token') as InjectionToken<T>;
+let _counter = 0;
+export function createServiceIdentifier<T>(description?: string): InjectionToken<T> {
+	return Symbol(description ?? `ServiceToken_${_counter++}`);
 }
 
-export class ServiceScope {
-	constructor(private readonly scope: DependencyContainer) {}
-
-	resolve<T>(token: InjectionToken<T>): T {
-		return this.scope.resolve(token);
-	}
-
-	async dispose() {
-		await this.scope.dispose();
-	}
+export interface ServiceCollection {
+	singleton: <T>(token: InjectionToken<T>, impl: Constructor) => this;
+	scoped: <T>(token: InjectionToken<T>, impl: Constructor) => this;
+	transient: <T>(token: InjectionToken<T>, impl: Constructor) => this;
+	createScope: () => ServiceScope;
 }
 
-class _ServiceCollection {
-	private readonly root = container;
-	private readonly scoped = new Map<InjectionToken, Constructor>();
-	private readonly transients = new Map<InjectionToken, Constructor>();
-
-	registerSingleton<T>(token: InjectionToken<T>, implementation: Constructor<T>) {
-		this.root.registerSingleton(token, implementation);
-	}
-
-	registerScoped<T>(token: InjectionToken<T>, implementation: Constructor<T>) {
-		this.scoped.set(token, implementation);
-	}
-
-	registerTransient<T>(token: InjectionToken<T>, implementation: Constructor<T>) {
-		this.transients.set(token, implementation);
-	}
-
-	createScope(): ServiceScope {
-		const scope = this.root.createChildContainer();
-		for (const [token, implementation] of this.scoped) {
-			scope.registerSingleton(token, implementation);
-		}
-		for (const [token, implementation] of this.transients) {
-			scope.register(token, { useClass: implementation });
-		}
-		return new ServiceScope(scope);
-	}
+export interface ServiceScope extends AsyncDisposable {
+	resolve: <T>(token: InjectionToken<T>) => T;
 }
 
-export const ServiceCollection = new _ServiceCollection();
+function buildServiceCollection(): ServiceCollection {
+	const root = container;
+	const scopedMap = new Map<InjectionToken<unknown>, Constructor>();
+	const transientMap = new Map<InjectionToken<unknown>, Constructor>();
 
-type ClassDecorator = <T extends new (...args: any[]) => any>(target: T) => T | void;
+	const api: ServiceCollection = {
+		singleton<T>(token: InjectionToken<T>, impl: Constructor) {
+			injectable()(impl);
+			root.registerSingleton(token, impl);
+			return api;
+		},
+		scoped<T>(token: InjectionToken<T>, impl: Constructor) {
+			injectable()(impl);
+			scopedMap.set(token as InjectionToken<unknown>, impl);
+			return api;
+		},
+		transient<T>(token: InjectionToken<T>, impl: Constructor) {
+			injectable()(impl);
+			transientMap.set(token as InjectionToken<unknown>, impl);
+			return api;
+		},
+		createScope(): ServiceScope {
+			const child = root.createChildContainer();
 
-export const Singleton = (token: InjectionToken): ClassDecorator => {
+			for (const [token, impl] of scopedMap) {
+				child.registerSingleton(token, impl);
+			}
+			for (const [token, impl] of transientMap) {
+				child.register(token, impl, { lifecycle: Lifecycle.Transient });
+			}
+
+			return new (class implements ServiceScope {
+				resolve<T>(token: InjectionToken<T>): T {
+					return child.resolve(token);
+				}
+				async [Symbol.asyncDispose]() {
+					await child.dispose();
+				}
+			})();
+		},
+	};
+
+	return api;
+}
+
+export const Services = buildServiceCollection();
+
+type ClassDecorator = (target: Constructor) => void;
+
+export const Singleton = <T>(token?: InjectionToken<T>): ClassDecorator => {
+	const tok = token ?? createServiceIdentifier<T>();
 	return (target) => {
 		injectable()(target);
-		ServiceCollection.registerSingleton(token, target as Constructor);
+		Services.singleton(tok, target);
+		(target as any).__diToken = tok;
 	};
 };
 
-export const Scoped = (token: InjectionToken): ClassDecorator => {
+export const Scoped = <T>(token?: InjectionToken<T>): ClassDecorator => {
+	const tok = token ?? createServiceIdentifier<T>();
 	return (target) => {
 		injectable()(target);
-		ServiceCollection.registerScoped(token, target as Constructor);
+		Services.scoped(tok, target);
+		(target as any).__diToken = tok;
 	};
 };
 
-export const Transient = (token: InjectionToken): ClassDecorator => {
+export const Transient = <T>(token?: InjectionToken<T>): ClassDecorator => {
+	const tok = token ?? createServiceIdentifier<T>();
 	return (target) => {
 		injectable()(target);
-		ServiceCollection.registerTransient(token, target as Constructor);
+		Services.transient(tok, target);
+		(target as any).__diToken = tok;
 	};
 };
 
 export const ServiceCollectionHandle: Handle = async ({ event, resolve }) => {
-	const scope = ServiceCollection.createScope();
+	const scope = Services.createScope();
+	event.locals.useService = <T>(token: InjectionToken<T>): T => scope.resolve(token);
 
-	event.locals.useService = <T>(token: InjectionToken<T>): T => {
-		return scope.resolve(token);
-	};
-
-	const response = await resolve(event);
-	await scope.dispose();
-	return response;
+	try {
+		return await resolve(event);
+	} finally {
+		await scope[Symbol.asyncDispose]();
+	}
 };
 
-export function useService<T>(token: InjectionToken<T>): T {
-	return getRequestEvent().locals.useService(token);
-}
+export const useService = <T>(token: InjectionToken<T>): T => {
+	const ev = getRequestEvent();
+	if (!ev?.locals?.useService) {
+		throw new Error('useService() can only be called inside a SvelteKit request context.');
+	}
+	return ev.locals.useService(token);
+};
 
-export { inject };
+export { inject } from 'tsyringe';

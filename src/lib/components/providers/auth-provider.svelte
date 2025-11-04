@@ -1,6 +1,8 @@
 <script module lang="ts">
 	import type { Session } from '@/server/types/session.types';
 
+	import { getSessionQuery } from '@/remote/auth.remote';
+
 	const GUEST_PATHS = ['/signin', '/signup'];
 
 	let session = $state<Session | null>(null);
@@ -10,9 +12,6 @@
 			get value() {
 				return session;
 			},
-			set(value: Session | null) {
-				session = value;
-			},
 		};
 	}
 </script>
@@ -20,10 +19,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
-
-	import { getSessionQuery } from '@/remote/auth.remote';
 
 	interface Props {
 		children: Snippet;
@@ -40,10 +37,18 @@
 			await query.refresh();
 			session = query.current ?? null;
 			if (!session && !GUEST_PATHS.includes(page.url.pathname)) {
-				goto('/');
+				goto('/signin');
 			}
 		}, 5000);
 		return () => clearInterval(interval);
+	});
+
+	beforeNavigate(async (e) => {
+		await query.refresh();
+		session = query.current ?? null;
+		if (!session && e.to && !GUEST_PATHS.includes(e.to.url.pathname)) {
+			goto('/signin');
+		}
 	});
 </script>
 

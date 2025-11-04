@@ -3,7 +3,7 @@
 	import * as Card from '@/components/shadcn/card';
 	import { Input } from '@/components/shadcn/input';
 	import { Label } from '@/components/shadcn/label';
-	import { getSessionQuery, loginForm } from '@/remote/auth.remote';
+	import { loginForm } from '@/remote/auth.remote';
 	import { loginSchema } from '@/schemas/auth.schema';
 </script>
 
@@ -14,9 +14,7 @@
 	</Card.Header>
 	<Card.Content class="grid gap-4">
 		<form
-			{...loginForm.preflight(loginSchema).enhance(async ({ submit }) => {
-				await submit().updates(getSessionQuery());
-			})}
+			{...loginForm.preflight(loginSchema)}
 			oninput={() => loginForm.validate()}
 			class="grid gap-4"
 		>
