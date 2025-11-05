@@ -29,7 +29,9 @@
 		$flash = undefined;
 	});
 
-	const layoutClass = page.route.id?.startsWith('/(auth)') ? 'justify-center' : 'justify-start';
+	const layoutClass = $derived.by(() =>
+		page.route.id?.startsWith('/(auth)') ? 'justify-center' : 'justify-start'
+	);
 </script>
 
 <svelte:head>

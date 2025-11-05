@@ -14,7 +14,9 @@
 	import { getTransactionsQuery } from '@/remote/transaction.remote';
 
 	const query = getTransactionsQuery();
-	const transactions = $derived.by(() => query.current ?? []);
+
+	const initialTransactions = await query;
+	const transactions = $derived.by(() => query.current ?? initialTransactions);
 
 	const today = new Date();
 	let selectedDate: DateValue = $state(
@@ -26,19 +28,26 @@
 	);
 
 	const selectedDateTransactions = $derived.by(() =>
-		transactions.filter((t) => isSameDay(t.madeAt, selectedDate))
+		transactions.filter((t) => t.madeAt && isSameDay(t.madeAt, selectedDate))
 	);
+
+	$effect(() => {
+		const interval = setInterval(() => {
+			query.refresh();
+		}, 10000);
+		return () => clearInterval(interval);
+	});
 </script>
 
 <div class="flex flex-col gap-6">
-	<BalanceHeader {query} {balance} {formatAmount} />
+	<BalanceHeader {balance} {formatAmount} />
 
-	<CalendarCard bind:selectedDate />
+	<CalendarCard bind:selectedDate {transactions} />
 
 	<div class="flex flex-col gap-2">
 		<AddIncomeDialog bind:selectedDate />
 		<AddSpendingDialog bind:selectedDate />
 	</div>
 
-	<TransactionsCard {query} {selectedDate} {selectedDateTransactions} {formatDate} />
+	<TransactionsCard {selectedDate} {selectedDateTransactions} {formatDate} />
 </div>

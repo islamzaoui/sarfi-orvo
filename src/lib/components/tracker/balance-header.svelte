@@ -1,29 +1,30 @@
 <script lang="ts">
-	import type { RemoteQuery } from '@sveltejs/kit';
+	import { LogOut } from '@lucide/svelte';
 
-	import { LoaderCircle } from '@lucide/svelte';
-
-	import type { Transaction } from '@/schemas/transaction.schema';
+	import favicon from '@/assets/favicon.svg';
+	import { Button } from '@/components/shadcn/button';
+	import { logoutForm } from '@/remote/auth.remote';
 
 	interface Props {
-		query: RemoteQuery<Transaction[]>;
 		balance: number;
 		formatAmount: (amount: number) => string;
 	}
 
-	const { query, balance, formatAmount }: Props = $props();
+	const { balance, formatAmount }: Props = $props();
 </script>
 
 <header class="flex items-center justify-between">
 	<div>
-		<h1 class="text-2xl font-bold tracking-tight">Wallet Tracker</h1>
-		<p class="text-sm text-muted-foreground">Track income & spending</p>
+		<img src={favicon} alt="Wallet Tracker" class="h-12 w-auto" />
 	</div>
-	<div class="text-3xl font-bold text-primary">
-		{#if query.loading || !query.ready}
-			<LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" />
-		{:else}
+	<div class="flex items-center gap-3">
+		<div class="text-3xl font-bold text-primary">
 			{formatAmount(balance)} DA
-		{/if}
+		</div>
+		<form {...logoutForm}>
+			<Button {...logoutForm.buttonProps} variant="outline" size="icon" title="Logout">
+				<LogOut class="h-4 w-4" />
+			</Button>
+		</form>
 	</div>
 </header>
