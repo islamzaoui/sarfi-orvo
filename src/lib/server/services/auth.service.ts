@@ -75,7 +75,7 @@ export class AuthService implements IAuthService {
 		},
 		verify: async (token: string): Promise<ISessionWithUser | null> => {
 			const result = await tryCatch(jwtVerify(token, this.SECRET));
-			if (result.error) {
+			if (result.err) {
 				return null;
 			}
 

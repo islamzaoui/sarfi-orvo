@@ -15,11 +15,8 @@
 
 <div
 	bind:this={ref}
-	data-slot="alert-description"
-	class={cn(
-		'col-start-2 grid justify-items-start gap-1 text-sm text-muted-foreground [&_p]:leading-relaxed',
-		className
-	)}
+	data-slot="dialog-header"
+	class={cn('flex flex-col gap-2 text-center sm:text-left', className)}
 	{...restProps}
 >
 	{@render children?.()}

@@ -176,6 +176,10 @@
 
 @layer base {
 	* {
+		scrollbar-width: thin;
+		scrollbar-gutter: stable both-edges;
+		scrollbar-color: var(--primary) var(--background);
+
 		@apply border-border outline-ring/50;
 	}
 	body {

@@ -28,6 +28,8 @@
 		}
 		$flash = undefined;
 	});
+
+	const layoutClass = page.route.id?.startsWith('/(auth)') ? 'justify-center' : 'justify-start';
 </script>
 
 <svelte:head>
@@ -37,6 +39,10 @@
 <ModeWatcher />
 <Toaster richColors />
 
-<AuthProvider>
-	{@render children()}
-</AuthProvider>
+<div class="flex min-h-svh flex-col items-center {layoutClass} gap-6 bg-background p-6 md:p-10">
+	<div class="w-full max-w-sm">
+		<AuthProvider>
+			{@render children()}
+		</AuthProvider>
+	</div>
+</div>
