@@ -6,14 +6,15 @@ import { dev } from '$app/environment';
 import { getRequestEvent } from '$app/server';
 import { JWT_SECRET } from '$env/static/private';
 import { jwtVerify, SignJWT } from 'jose';
-import { redirect } from 'sveltekit-flash-message/server';
 
 import type { LoginBody, RegisterBody } from '@/schemas/auth.schema';
 import type { ISessionRepo } from '@/server/repos/session.repo';
 import type { IUserRepo } from '@/server/repos/user.repo';
 import type { ISessionWithUser, Session } from '@/server/types/session.types';
 
-import { createServiceIdentifier, inject, Scoped, useService } from '@/server/di';
+import { useService } from '@/server/container';
+import { createServiceIdentifier, inject, injectable } from '@/server/di';
+import { redirect } from '@/server/redirect';
 import { SessionRepoId } from '@/server/repos/session.repo';
 import { UserRepoId } from '@/server/repos/user.repo';
 import { tryCatch } from '@/utils/trycatch';
@@ -27,11 +28,11 @@ export interface IAuthService {
 	logout: () => Promise<void>;
 }
 
-export const AuthServiceId = createServiceIdentifier<IAuthService>();
+export const AuthServiceId = createServiceIdentifier<IAuthService>('AuthService');
 
 type SessionName = 'session-token' | 'session-jwt';
 
-@Scoped(AuthServiceId)
+@injectable()
 export class AuthService implements IAuthService {
 	private _session: ISessionWithUser | null = null;
 
@@ -44,7 +45,7 @@ export class AuthService implements IAuthService {
 	) {}
 
 	public static handle: Handle = async ({ event, resolve }) => {
-		await useService(AuthServiceId).verifySession();
+		await useService('AuthService').verifySession();
 		return resolve(event);
 	};
 
@@ -178,16 +179,11 @@ export class AuthService implements IAuthService {
 	}
 
 	async register(body: RegisterBody, invalid: Invalid<RegisterBody>): Promise<void> {
-		const event = getRequestEvent();
 		if (this.session) {
-			redirect(
-				'/',
-				{
-					type: 'error',
-					message: 'You are already logged in.',
-				},
-				event
-			);
+			return redirect('/', {
+				type: 'error',
+				message: 'You are already logged in.',
+			});
 		}
 
 		if (await this.isEmailTaken(body.email)) {
@@ -218,28 +214,19 @@ export class AuthService implements IAuthService {
 		});
 		this.cookie.set('session-jwt', jwt);
 
-		redirect(
-			'/',
-			{
-				type: 'success',
-				message: 'You have successfully Registered.',
-				description: `Welcome to Sarfi, ${newUser.email}!`,
-			},
-			event
-		);
+		return redirect('/', {
+			type: 'success',
+			message: 'You have successfully Registered.',
+			description: `Welcome to Sarfi, ${newUser.email}!`,
+		});
 	}
 
 	async login(body: LoginBody, invalid: Invalid<LoginBody>): Promise<void> {
-		const event = getRequestEvent();
 		if (this.session) {
-			redirect(
-				'/',
-				{
-					type: 'error',
-					message: 'You are already logged in.',
-				},
-				event
-			);
+			return redirect('/', {
+				type: 'error',
+				message: 'You are already logged in.',
+			});
 		}
 
 		const existingUser = await this.userRepo.getUserByEmail(body.email);
@@ -264,15 +251,11 @@ export class AuthService implements IAuthService {
 		});
 		this.cookie.set('session-jwt', jwt);
 
-		redirect(
-			'/',
-			{
-				type: 'success',
-				message: 'You have successfully logged in.',
-				description: `Welcome back, ${existingUser.email}!`,
-			},
-			event
-		);
+		return redirect('/', {
+			type: 'success',
+			message: 'You have successfully logged in.',
+			description: `Welcome back, ${existingUser.email}!`,
+		});
 	}
 
 	async verifySession(): Promise<void> {
@@ -316,7 +299,6 @@ export class AuthService implements IAuthService {
 	}
 
 	async logout(): Promise<void> {
-		const event = getRequestEvent();
 		if (!this.session) {
 			return;
 		}
@@ -326,13 +308,9 @@ export class AuthService implements IAuthService {
 		this.cookie.delete('session-token');
 		this.cookie.delete('session-jwt');
 
-		redirect(
-			'/',
-			{
-				type: 'success',
-				message: 'You have successfully logged out.',
-			},
-			event
-		);
+		return redirect('/', {
+			type: 'success',
+			message: 'You have successfully logged out.',
+		});
 	}
 }

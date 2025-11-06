@@ -5,7 +5,7 @@ import type { ISessionWithUser } from '@/server/types/session.types';
 import type { ICreateUser, IUser } from '@/server/types/user.types';
 
 import { usersTable } from '@/server/database/schema';
-import { createServiceIdentifier, inject, Singleton } from '@/server/di';
+import { createServiceIdentifier, inject, injectable } from '@/server/di';
 import { DatabaseServiceId } from '@/server/services/database.service';
 
 export interface IUserRepo {
@@ -15,9 +15,9 @@ export interface IUserRepo {
 	getUserByEmail: (email: string) => Promise<IUser | null>;
 }
 
-export const UserRepoId = createServiceIdentifier<IUserRepo>();
+export const UserRepoId = createServiceIdentifier<IUserRepo>('UserRepo');
 
-@Singleton(UserRepoId)
+@injectable()
 export class UserRepo implements IUserRepo {
 	session: ISessionWithUser | null = null;
 

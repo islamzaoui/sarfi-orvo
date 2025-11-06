@@ -1,19 +1,18 @@
 import { form, query } from '$app/server';
 
 import { loginSchema, registerSchema } from '@/schemas/auth.schema';
-import { useService } from '@/server/di';
-import { AuthServiceId } from '@/server/services/auth.service';
+import { useService } from '@/server/container';
 
 export const registerForm = form(
 	registerSchema,
-	async (data, invalid) => await useService(AuthServiceId).register(data, invalid)
+	async (data, invalid) => await useService('AuthService').register(data, invalid)
 );
 
 export const loginForm = form(
 	loginSchema,
-	async (data, invalid) => await useService(AuthServiceId).login(data, invalid)
+	async (data, invalid) => await useService('AuthService').login(data, invalid)
 );
 
-export const getSessionQuery = query(async () => useService(AuthServiceId).getClientSession());
+export const getSessionQuery = query(async () => useService('AuthService').getClientSession());
 
-export const logoutForm = form(async () => await useService(AuthServiceId).logout());
+export const logoutForm = form(async () => await useService('AuthService').logout());

@@ -1,8 +1,7 @@
 import { loadFlash } from 'sveltekit-flash-message/server';
 
-import { useService } from '@/server/di';
-import { AuthServiceId } from '@/server/services/auth.service';
+import { useService } from '@/server/container';
 
 export const load = loadFlash(() => ({
-	session: useService(AuthServiceId).getClientSession(),
+	session: useService('AuthService').getClientSession(),
 }));

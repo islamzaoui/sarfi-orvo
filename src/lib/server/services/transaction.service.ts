@@ -1,22 +1,27 @@
+import { error } from '@sveltejs/kit';
+
 import type { Transaction, TransactionCreate } from '@/schemas/transaction.schema';
+import type { ITransactionRepo } from '@/server/repos/transaction.repo';
+import type { IAuthService } from '@/server/services/auth.service';
 
-import type { ITransactionRepo } from '../repos/transaction.repo';
-import type { IAuthService } from './auth.service';
-
-import { createServiceIdentifier, inject, Scoped } from '../di';
-import { ServiceError } from '../error';
-import { TransactionRepoId } from '../repos/transaction.repo';
-import { AuthServiceId } from './auth.service';
+import { createServiceIdentifier, inject, injectable } from '@/server/di';
+import { redirect } from '@/server/redirect';
+import { TransactionRepoId } from '@/server/repos/transaction.repo';
+import { AuthServiceId } from '@/server/services/auth.service';
 
 export interface ITransactionService {
 	getTransactions: () => Promise<Transaction[]>;
-	createTransaction: (data: TransactionCreate) => Promise<Transaction>;
-	deleteTransactionById: (id: string) => Promise<void>;
+	createTransaction: (data: TransactionCreate, refresh: () => Promise<void>) => Promise<void>;
+	deleteTransactionById: (
+		id: string,
+		refresh: () => Promise<void>
+	) => Promise<{ success: boolean; code?: string }>;
 }
 
-export const TransactionServiceId = createServiceIdentifier<ITransactionService>();
+export const TransactionServiceId =
+	createServiceIdentifier<ITransactionService>('TransactionService');
 
-@Scoped(TransactionServiceId)
+@injectable()
 export class TransactionService implements ITransactionService {
 	constructor(
 		@inject(TransactionRepoId) private readonly transactionRepo: ITransactionRepo,
@@ -26,7 +31,7 @@ export class TransactionService implements ITransactionService {
 	async getTransactions(): Promise<Transaction[]> {
 		const userId = this.authService.session?.user.id;
 		if (!userId) {
-			throw new ServiceError('UNAUTHORIZED');
+			return error(401, 'Unauthorized');
 		}
 
 		const transactions = await this.transactionRepo.getTransactionsByuserId(userId);
@@ -43,13 +48,13 @@ export class TransactionService implements ITransactionService {
 		);
 	}
 
-	async createTransaction(data: TransactionCreate): Promise<Transaction> {
+	async createTransaction(data: TransactionCreate, refresh: () => Promise<void>): Promise<void> {
 		const userId = this.authService.session?.user.id;
 		if (!userId) {
-			throw new ServiceError('UNAUTHORIZED');
+			return redirect('/signin', { type: 'error', message: 'You are not logged in.' });
 		}
 
-		const transaction = await this.transactionRepo.createTransaction({
+		await this.transactionRepo.createTransaction({
 			userId,
 			amount: data.amount,
 			type: data.type,
@@ -57,21 +62,24 @@ export class TransactionService implements ITransactionService {
 			madeAt: data.madeAt,
 		});
 
-		return {
-			id: transaction.id,
-			amount: transaction.amount,
-			type: transaction.type,
-			details: transaction.details ?? undefined,
-			madeAt: transaction.madeAt,
-		} satisfies Transaction;
+		await refresh();
+
+		return redirect({ type: 'success', message: 'Transaction created successfully.' });
 	}
 
-	async deleteTransactionById(id: string): Promise<void> {
+	async deleteTransactionById(
+		id: string,
+		refresh: () => Promise<void>
+	): Promise<{ success: boolean; code?: string }> {
 		const userId = this.authService.session?.user.id;
 		if (!userId) {
-			throw new ServiceError('UNAUTHORIZED');
+			return { success: false, code: 'Unauthorized' };
 		}
 
 		await this.transactionRepo.deleteTransactionById(id);
+
+		await refresh();
+
+		return { success: true };
 	}
 }

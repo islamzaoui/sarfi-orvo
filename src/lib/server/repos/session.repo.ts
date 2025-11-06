@@ -4,7 +4,7 @@ import type { IDatabaseService } from '@/server/services/database.service';
 import type { ISession, ISessionWithToken, ISessionWithUser } from '@/server/types/session.types';
 
 import { sessionsTable, usersTable } from '@/server/database/schema';
-import { createServiceIdentifier, inject, Singleton } from '@/server/di';
+import { createServiceIdentifier, inject, injectable } from '@/server/di';
 import { DatabaseServiceId } from '@/server/services/database.service';
 
 export interface ISessionRepo {
@@ -16,9 +16,9 @@ export interface ISessionRepo {
 	validateSessionToken: (token: string) => Promise<ISessionWithUser | null>;
 }
 
-export const SessionRepoId = createServiceIdentifier<ISessionRepo>();
+export const SessionRepoId = createServiceIdentifier<ISessionRepo>('SessionRepo');
 
-@Singleton(SessionRepoId)
+@injectable()
 export class SessionRepo implements ISessionRepo {
 	readonly INACTIVE_TIMEOUT_IN_SECONDS = 60 * 60 * 24 * 7;
 	readonly ACTIVITY_CHECK_INTERVAL_IN_SECONDS = 60 * 60;

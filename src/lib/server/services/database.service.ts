@@ -6,7 +6,7 @@ import { drizzle as memeoryDrizzle } from 'drizzle-orm/better-sqlite3';
 import { drizzle } from 'drizzle-orm/d1';
 
 import * as schema from '@/server/database/schema';
-import { createServiceIdentifier, Scoped } from '@/server/di';
+import { createServiceIdentifier, injectable } from '@/server/di';
 
 type DatabaseORM = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
@@ -14,9 +14,9 @@ export interface IDatabaseService {
 	readonly drizzle: DatabaseORM;
 }
 
-export const DatabaseServiceId = createServiceIdentifier<IDatabaseService>();
+export const DatabaseServiceId = createServiceIdentifier<IDatabaseService>('DatabaseService');
 
-@Scoped(DatabaseServiceId)
+@injectable()
 export class DatabaseService implements IDatabaseService {
 	private _drizzle: DatabaseORM | null = null;
 

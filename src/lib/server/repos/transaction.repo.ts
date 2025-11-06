@@ -4,7 +4,7 @@ import type { IDatabaseService } from '../services/database.service';
 import type { ITransaction, ITransactionCreate } from '../types/transaction.types';
 
 import { transactionsTable } from '../database/schema';
-import { createServiceIdentifier, inject, Singleton } from '../di';
+import { createServiceIdentifier, inject, injectable } from '../di';
 import { DatabaseServiceId } from '../services/database.service';
 
 export interface ITransactionRepo {
@@ -13,9 +13,9 @@ export interface ITransactionRepo {
 	deleteTransactionById: (id: string) => Promise<void>;
 }
 
-export const TransactionRepoId = createServiceIdentifier<ITransactionRepo>();
+export const TransactionRepoId = createServiceIdentifier<ITransactionRepo>('TransactionRepo');
 
-@Singleton(TransactionRepoId)
+@injectable()
 export class TransactionRepo implements ITransactionRepo {
 	constructor(@inject(DatabaseServiceId) private readonly dbService: IDatabaseService) {}
 

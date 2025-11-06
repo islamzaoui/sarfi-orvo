@@ -18,20 +18,18 @@
 	async function handleDelete() {
 		const result = await deleteTransactionCommand({ id: transaction.id });
 		if (!result.success) {
-			switch (result.err) {
-				case 'UNAUTHORIZED':
+			switch (result.code) {
+				case 'Unauthorized':
+					toast.error('You are not authorized to delete this transaction.');
 					goto('/signin');
 					break;
-				case 'INTERNAL_SERVER_ERROR':
-					toast.error('Unable to delete transaction due to internal server error');
-					break;
+
 				default:
-					toast.error('Unable to delete transaction due to unknown error');
-					break;
+					toast.error('Failed to delete transaction.');
 			}
 			return;
 		}
-		toast.success('Transaction deleted successfuly');
+		toast.success('Transaction deleted successfully.');
 	}
 </script>
 
