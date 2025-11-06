@@ -41,7 +41,7 @@
 <ModeWatcher />
 <Toaster richColors />
 
-<div class="flex min-h-svh flex-col items-center {layoutClass} gap-6 bg-background p-6 md:p-10">
+<div class="flex min-h-screen flex-col items-center {layoutClass} gap-6 bg-background p-6 md:p-10">
 	<div class="w-full max-w-sm">
 		<AuthProvider>
 			{@render children()}

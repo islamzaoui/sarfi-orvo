@@ -18,7 +18,7 @@
 		<img src={favicon} alt="Wallet Tracker" class="h-12 w-auto" />
 	</div>
 	<div class="flex items-center gap-3">
-		<div class="text-3xl font-bold text-primary">
+		<div class="text-3xl font-bold text-primary-foreground">
 			{formatAmount(balance)} DA
 		</div>
 		<form {...logoutForm}>

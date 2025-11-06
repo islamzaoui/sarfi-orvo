@@ -22,7 +22,7 @@
 	const { selectedDate, selectedDateTransactions, formatDate }: Props = $props();
 </script>
 
-<Card class="flex flex-col">
+<Card class="flex flex-1 flex-col">
 	<CardHeader class="pb-2">
 		<CardTitle class="text-base">Transactions – {formatDate(selectedDate)}</CardTitle>
 		<CardDescription class="text-xs">

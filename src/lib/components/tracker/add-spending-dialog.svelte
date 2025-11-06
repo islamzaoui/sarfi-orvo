@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { DateValue } from '@internationalized/date';
 
-	import { Plus } from '@lucide/svelte';
+	import { Minus } from '@lucide/svelte';
 	import { beforeNavigate } from '$app/navigation';
 
 	import { Button } from '@/components/shadcn/button';
@@ -9,6 +9,7 @@
 		Dialog,
 		DialogContent,
 		DialogDescription,
+		DialogFooter,
 		DialogHeader,
 		DialogTitle,
 		DialogTrigger,
@@ -34,8 +35,8 @@
 <Dialog bind:open>
 	<DialogTrigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="outline" class="w-full" size="lg">
-				<Plus class="mr-1.5 h-4 w-4" />Add Spending
+			<Button {...props} variant="outline" class="flex-1" size="lg">
+				<Minus class="mr-1.5 h-4 w-4" />Add Spending
 			</Button>
 		{/snippet}
 	</DialogTrigger>
@@ -44,23 +45,35 @@
 			<DialogTitle>Add Spending</DialogTitle>
 			<DialogDescription>Record an expense</DialogDescription>
 		</DialogHeader>
-		<form {...createTransactionForm.preflight(createTransactionSchema)} class="grid gap-3 py-2">
-			<div>
+		<form
+			{...createTransactionForm.preflight(createTransactionSchema)}
+			oninput={() => createTransactionForm.validate()}
+			class="grid gap-4"
+		>
+			<div class="grid gap-2">
 				<Label for="sp-amount">Amount</Label>
 				<Input {...createTransactionForm.fields.amount.as('number')} placeholder="0 DA" />
+				{#each createTransactionForm.fields.amount.issues() as issue}
+					<small class="text-red-500">{issue.message}</small>
+				{/each}
 			</div>
-			<div>
+			<div class="grid gap-2">
 				<Label for="sp-details">Details (optional)</Label>
 				<Input
 					{...createTransactionForm.fields.details.as('text')}
 					placeholder="e.g., Groceries"
 				/>
+				{#each createTransactionForm.fields.details.issues() as issue}
+					<small class="text-red-500">{issue.message}</small>
+				{/each}
 			</div>
 			<Input {...createTransactionForm.fields.type.as('hidden', 'spending')} />
 			<Input {...createTransactionForm.fields.madeAt.as('hidden', selectedDate.toString())} />
-			<Button {...createTransactionForm.buttonProps} variant="destructive" class="w-full">
-				Add Spending
-			</Button>
+			<DialogFooter>
+				<Button {...createTransactionForm.buttonProps} variant="outline"
+					>Add Spending</Button
+				>
+			</DialogFooter>
 		</form>
 	</DialogContent>
 </Dialog>
