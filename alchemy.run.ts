@@ -15,6 +15,7 @@ export const worker = await SvelteKit('website', {
 	bindings: {
 		DB: database,
 	},
+	domains: ['sarfi.orvo.top'],
 });
 
 // eslint-disable-next-line no-console

@@ -20,7 +20,11 @@
 		>
 			<div class="grid gap-2">
 				<Label for="email">Email</Label>
-				<Input {...loginForm.fields.email.as('email')} placeholder="you@example.com" />
+				<Input
+					{...loginForm.fields.email.as('email')}
+					autocomplete="email"
+					placeholder="you@example.com"
+				/>
 				{#each loginForm.fields.email.issues() as issue}
 					<small class="text-red-500">{issue.message}</small>
 				{/each}
@@ -29,6 +33,7 @@
 				<Label for="password">Password</Label>
 				<Input
 					{...loginForm.fields.password.as('password')}
+					autocomplete="current-password"
 					placeholder="●●●●●●●●●●●●●●●"
 				/>
 				{#each loginForm.fields.password.issues() as issue}
