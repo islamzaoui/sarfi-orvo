@@ -45,9 +45,9 @@
 	<CalendarCard bind:selectedDate {transactions} />
 
 	<div class="flex gap-3">
-		<AddIncomeDialog bind:selectedDate />
-		<AddSpendingDialog bind:selectedDate />
+		<AddIncomeDialog {query} {selectedDate} />
+		<AddSpendingDialog {query} {selectedDate} />
 	</div>
 
-	<TransactionsCard {selectedDate} {selectedDateTransactions} {formatDate} />
+	<TransactionsCard {query} {selectedDate} {selectedDateTransactions} {formatDate} />
 </div>

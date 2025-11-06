@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { RemoteQuery } from '@sveltejs/kit';
+
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
@@ -10,13 +12,16 @@
 	import { formatAmount } from './tracker-utils';
 
 	interface Props {
+		query: RemoteQuery<Transaction[]>;
 		transaction: Transaction;
 	}
 
-	const { transaction }: Props = $props();
+	const { query, transaction }: Props = $props();
 
 	async function handleDelete() {
-		const result = await deleteTransactionCommand({ id: transaction.id });
+		const result = await deleteTransactionCommand({ id: transaction.id }).updates(
+			query.withOverride((curr) => curr.filter((t) => t.id !== transaction.id))
+		);
 		if (!result.success) {
 			switch (result.code) {
 				case 'Unauthorized':

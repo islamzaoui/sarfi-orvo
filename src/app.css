@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@custom-variant mobile {
+	@media (min-width: 400px) {
+		@slot;
+	}
+}
+
 @font-face {
 	font-family: 'Geist Mono Variable';
 	font-style: normal;

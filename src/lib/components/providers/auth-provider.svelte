@@ -44,10 +44,12 @@
 	});
 
 	beforeNavigate(async (e) => {
-		await query.refresh();
-		session = query.current ?? null;
-		if (!session && e.to && !GUEST_PATHS.includes(e.to.url.pathname)) {
-			goto('/signin');
+		if ($effect.pending()) {
+			await query.refresh();
+			session = query.current ?? null;
+			if (!session && e.to && !GUEST_PATHS.includes(e.to.url.pathname)) {
+				goto('/signin');
+			}
 		}
 	});
 </script>

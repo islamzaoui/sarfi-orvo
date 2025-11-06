@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { DateValue } from '@internationalized/date';
+	import type { RemoteQuery } from '@sveltejs/kit';
 
 	import type { Transaction } from '@/schemas/transaction.schema';
 
@@ -14,12 +15,13 @@
 	import TransactionItem from './transaction-item.svelte';
 
 	interface Props {
+		query: RemoteQuery<Transaction[]>;
 		selectedDate: DateValue;
 		selectedDateTransactions: Transaction[];
 		formatDate: (date: DateValue) => string;
 	}
 
-	const { selectedDate, selectedDateTransactions, formatDate }: Props = $props();
+	const { query, selectedDate, selectedDateTransactions, formatDate }: Props = $props();
 </script>
 
 <Card class="flex flex-1 flex-col">
@@ -38,7 +40,7 @@
 		{:else}
 			<div class="space-y-2">
 				{#each selectedDateTransactions as tx (tx.id)}
-					<TransactionItem transaction={tx} />
+					<TransactionItem {query} transaction={tx} />
 				{/each}
 			</div>
 		{/if}
