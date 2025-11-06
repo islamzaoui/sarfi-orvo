@@ -15,7 +15,6 @@
 	<Card.Content class="grid gap-4">
 		<form
 			{...loginForm.preflight(loginSchema)}
-			oninput={() => loginForm.validate()}
 			class="grid gap-4"
 		>
 			<div class="grid gap-2">

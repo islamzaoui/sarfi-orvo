@@ -8,14 +8,10 @@ export const getTransactionsQuery = query(
 );
 
 export const createTransactionForm = form(createTransactionSchema, async (data) => {
-	await useService('TransactionService').createTransaction(data, getTransactionsQuery().refresh);
+	await useService('TransactionService').createTransaction(data);
 });
 
 export const deleteTransactionCommand = command(
 	deleteTransactionSchema,
-	async (data) =>
-		await useService('TransactionService').deleteTransactionById(
-			data.id,
-			getTransactionsQuery().refresh
-		)
+	async (data) => await useService('TransactionService').deleteTransactionById(data.id)
 );

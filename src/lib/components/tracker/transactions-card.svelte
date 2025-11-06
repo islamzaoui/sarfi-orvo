@@ -12,16 +12,16 @@
 		CardTitle,
 	} from '@/components/shadcn/card';
 
+	import { formatDate } from './tracker-utils';
 	import TransactionItem from './transaction-item.svelte';
 
 	interface Props {
 		query: RemoteQuery<Transaction[]>;
 		selectedDate: DateValue;
 		selectedDateTransactions: Transaction[];
-		formatDate: (date: DateValue) => string;
 	}
 
-	const { query, selectedDate, selectedDateTransactions, formatDate }: Props = $props();
+	const { query, selectedDate, selectedDateTransactions }: Props = $props();
 </script>
 
 <Card class="flex flex-1 flex-col">

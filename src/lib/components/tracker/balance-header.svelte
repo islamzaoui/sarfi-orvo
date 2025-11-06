@@ -5,12 +5,13 @@
 	import { Button } from '@/components/shadcn/button';
 	import { logoutForm } from '@/remote/auth.remote';
 
+	import { formatAmount } from './tracker-utils';
+
 	interface Props {
 		balance: number;
-		formatAmount: (amount: number) => string;
 	}
 
-	const { balance, formatAmount }: Props = $props();
+	const { balance }: Props = $props();
 </script>
 
 <header class="flex items-center justify-between">

@@ -3,10 +3,9 @@
 
 	interface Props {
 		onDelete: () => void | Promise<void>;
-		ariaLabel?: string;
 	}
 
-	const { onDelete, ariaLabel = 'Hold to delete' }: Props = $props();
+	const { onDelete }: Props = $props();
 
 	let deleteTimeout: ReturnType<typeof setTimeout> | null = $state(null);
 
@@ -50,7 +49,7 @@
 	ontouchstart={handleMouseDown}
 	ontouchend={handleMouseUp}
 	ontouchcancel={handleMouseUp}
-	aria-label={ariaLabel}
+	aria-label="Hold to delete"
 >
 	<div aria-hidden="true" class="hold-overlay">
 		<Trash2 class="h-4 w-4" />

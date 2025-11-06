@@ -13,11 +13,7 @@
 		<Card.Description>Enter your email below to create an account.</Card.Description>
 	</Card.Header>
 	<Card.Content class="grid gap-4">
-		<form
-			{...registerForm.preflight(registerSchema)}
-			oninput={() => registerForm.validate()}
-			class="grid gap-4"
-		>
+		<form {...registerForm.preflight(registerSchema)} class="grid gap-4">
 			<div class="grid gap-2">
 				<Label for="email">Email</Label>
 				<Input

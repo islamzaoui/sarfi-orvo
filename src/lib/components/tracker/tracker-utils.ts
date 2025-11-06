@@ -16,7 +16,21 @@ export function isSameDay(d1: Date | undefined, d2: DateValue | undefined): bool
 
 export function formatDate(d: DateValue | undefined): string {
 	if (!d) return '';
-	return calendarDateToDate(d).toLocaleDateString('en-US', {
+
+	const date = calendarDateToDate(d);
+	const today = new Date();
+
+	const normalize = (dt: Date) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+	const nDate = normalize(date);
+	const nToday = normalize(today);
+
+	const diffDays = Math.round((nDate.getTime() - nToday.getTime()) / (1000 * 60 * 60 * 24));
+
+	if (diffDays === 0) return 'Today';
+	if (diffDays === -1) return 'Yesterday';
+	if (diffDays === 1) return 'Tomorrow';
+
+	return date.toLocaleDateString('en-US', {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric',
@@ -27,9 +41,6 @@ export function formatAmount(amount: number): string {
 	return amount.toString().replace(/\.0+$/, '');
 }
 
-/**
- * Calculate the net amount for a specific date (income - spending)
- */
 export function getDailyNetAmount(
 	date: DateValue | undefined,
 	transactions: Transaction[]
@@ -54,16 +65,12 @@ export type DayColor =
 	| 'red-medium'
 	| 'red-high';
 
-/**
- * Get the color enum for a day based on its net amount (GitHub commit style)
- */
 export function getDayColor(netAmount: number): DayColor {
 	if (netAmount === 0) {
 		return 'none';
 	}
 
 	if (netAmount > 0) {
-		// Green shades for positive (income)
 		if (netAmount >= 1000) {
 			return 'green-high';
 		} else if (netAmount >= 100) {
@@ -74,7 +81,6 @@ export function getDayColor(netAmount: number): DayColor {
 			return 'green-light';
 		}
 	} else {
-		// Red shades for negative (spending)
 		const absAmount = Math.abs(netAmount);
 		if (absAmount >= 1000) {
 			return 'red-high';
@@ -88,37 +94,31 @@ export function getDayColor(netAmount: number): DayColor {
 	}
 }
 
-/**
- * Get the color class for a day based on its net amount (GitHub commit style)
- * @deprecated Use getDayColor instead
- */
 export function getDayColorClass(netAmount: number): string {
 	if (netAmount === 0) {
-		return ''; // No color for zero
+		return '';
 	}
 
 	if (netAmount > 0) {
-		// Green shades for positive (income)
 		if (netAmount >= 1000) {
-			return 'bg-green-600 dark:bg-green-700'; // High green
+			return 'bg-green-600 dark:bg-green-700';
 		} else if (netAmount >= 100) {
-			return 'bg-green-400 dark:bg-green-600'; // Medium green
+			return 'bg-green-400 dark:bg-green-600';
 		} else if (netAmount >= 10) {
-			return 'bg-green-300 dark:bg-green-500'; // Light green
+			return 'bg-green-300 dark:bg-green-500';
 		} else {
-			return 'bg-green-200 dark:bg-green-400'; // Very light green
+			return 'bg-green-200 dark:bg-green-400';
 		}
 	} else {
-		// Red shades for negative (spending)
 		const absAmount = Math.abs(netAmount);
 		if (absAmount >= 1000) {
-			return 'bg-red-600 dark:bg-red-700'; // High red
+			return 'bg-red-600 dark:bg-red-700';
 		} else if (absAmount >= 100) {
-			return 'bg-red-400 dark:bg-red-600'; // Medium red
+			return 'bg-red-400 dark:bg-red-600';
 		} else if (absAmount >= 10) {
-			return 'bg-red-300 dark:bg-red-500'; // Light red
+			return 'bg-red-300 dark:bg-red-500';
 		} else {
-			return 'bg-red-200 dark:bg-red-400'; // Very light red
+			return 'bg-red-200 dark:bg-red-400';
 		}
 	}
 }

@@ -21,6 +21,16 @@
 	}
 
 	let { selectedDate = $bindable(), transactions }: Props = $props();
+
+	let internalSelectedDate: DateValue | undefined = $state(selectedDate);
+
+	$effect(() => {
+		if (internalSelectedDate === undefined || internalSelectedDate === null) {
+			internalSelectedDate = selectedDate;
+		} else {
+			selectedDate = internalSelectedDate;
+		}
+	});
 </script>
 
 <Card class="overflow-hidden">
@@ -29,7 +39,7 @@
 		<CardDescription class="text-xs">Select a date to view details</CardDescription>
 	</CardHeader>
 	<CardContent class="flex flex-col items-center">
-		<Calendar type="single" bind:value={selectedDate} class="rounded-md border">
+		<Calendar type="single" bind:value={internalSelectedDate} class="rounded-md border">
 			{#snippet day({ day })}
 				{@const netAmount = day ? getDailyNetAmount(day, transactions ?? []) : 0}
 				{@const dayColor = getDayColor(netAmount)}

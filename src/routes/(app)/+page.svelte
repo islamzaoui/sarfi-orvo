@@ -10,7 +10,7 @@
 		CalendarCard,
 		TransactionsCard,
 	} from '@/components/tracker';
-	import { formatAmount, formatDate, isSameDay } from '@/components/tracker/tracker-utils';
+	import { isSameDay } from '@/components/tracker/tracker-utils';
 	import { getTransactionsQuery } from '@/remote/transaction.remote';
 
 	const query = getTransactionsQuery();
@@ -30,17 +30,10 @@
 	const selectedDateTransactions = $derived.by(() =>
 		transactions.filter((t) => t.madeAt && isSameDay(t.madeAt, selectedDate))
 	);
-
-	$effect(() => {
-		const interval = setInterval(() => {
-			query.refresh();
-		}, 10000);
-		return () => clearInterval(interval);
-	});
 </script>
 
 <div class="flex flex-col gap-6">
-	<BalanceHeader {balance} {formatAmount} />
+	<BalanceHeader {balance} />
 
 	<CalendarCard bind:selectedDate {transactions} />
 
@@ -49,5 +42,5 @@
 		<AddSpendingDialog {query} {selectedDate} />
 	</div>
 
-	<TransactionsCard {query} {selectedDate} {selectedDateTransactions} {formatDate} />
+	<TransactionsCard {query} {selectedDate} {selectedDateTransactions} />
 </div>

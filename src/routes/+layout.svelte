@@ -6,7 +6,6 @@
 	import { getFlash } from 'sveltekit-flash-message';
 
 	import favicon from '@/assets/favicon.svg';
-	import AuthProvider from '@/components/providers/auth-provider.svelte';
 	import { Toaster } from '@/components/shadcn/sonner';
 
 	const { children } = $props();
@@ -36,6 +35,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>Sarfi</title>
 </svelte:head>
 
 <ModeWatcher />
@@ -43,8 +43,6 @@
 
 <div class="flex min-h-screen flex-col items-center {layoutClass} gap-6 bg-background p-6 md:p-10">
 	<div class="w-full max-w-sm">
-		<AuthProvider>
-			{@render children()}
-		</AuthProvider>
+		{@render children()}
 	</div>
 </div>

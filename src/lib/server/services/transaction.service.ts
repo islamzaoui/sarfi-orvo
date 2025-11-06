@@ -5,17 +5,13 @@ import type { ITransactionRepo } from '@/server/repos/transaction.repo';
 import type { IAuthService } from '@/server/services/auth.service';
 
 import { createServiceIdentifier, inject, injectable } from '@/server/di';
-import { redirect } from '@/server/redirect';
 import { TransactionRepoId } from '@/server/repos/transaction.repo';
 import { AuthServiceId } from '@/server/services/auth.service';
 
 export interface ITransactionService {
 	getTransactions: () => Promise<Transaction[]>;
-	createTransaction: (data: TransactionCreate, refresh: () => Promise<void>) => Promise<void>;
-	deleteTransactionById: (
-		id: string,
-		refresh: () => Promise<void>
-	) => Promise<{ success: boolean; code?: string }>;
+	createTransaction: (data: TransactionCreate) => Promise<void>;
+	deleteTransactionById: (id: string) => Promise<{ success: boolean; code?: string }>;
 }
 
 export const TransactionServiceId =
@@ -48,10 +44,10 @@ export class TransactionService implements ITransactionService {
 		);
 	}
 
-	async createTransaction(data: TransactionCreate, refresh: () => Promise<void>): Promise<void> {
+	async createTransaction(data: TransactionCreate): Promise<void> {
 		const userId = this.authService.session?.user.id;
 		if (!userId) {
-			return redirect('/signin', { type: 'error', message: 'You are not logged in.' });
+			return error(401, 'Unauthorized');
 		}
 
 		await this.transactionRepo.createTransaction({
@@ -61,24 +57,15 @@ export class TransactionService implements ITransactionService {
 			details: data.details ?? null,
 			madeAt: data.madeAt,
 		});
-
-		await refresh();
-
-		return redirect({ type: 'success', message: 'Transaction created successfully.' });
 	}
 
-	async deleteTransactionById(
-		id: string,
-		refresh: () => Promise<void>
-	): Promise<{ success: boolean; code?: string }> {
+	async deleteTransactionById(id: string): Promise<{ success: boolean; code?: string }> {
 		const userId = this.authService.session?.user.id;
 		if (!userId) {
 			return { success: false, code: 'Unauthorized' };
 		}
 
 		await this.transactionRepo.deleteTransactionById(id);
-
-		await refresh();
 
 		return { success: true };
 	}

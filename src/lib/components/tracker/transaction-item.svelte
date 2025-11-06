@@ -8,7 +8,7 @@
 
 	import { deleteTransactionCommand } from '@/remote/transaction.remote';
 
-	import { HoldDeleteButton } from './';
+	import { HoldDeleteButton } from '.';
 	import { formatAmount } from './tracker-utils';
 
 	interface Props {
@@ -18,10 +18,11 @@
 
 	const { query, transaction }: Props = $props();
 
-	async function handleDelete() {
+	async function onDelete() {
 		const result = await deleteTransactionCommand({ id: transaction.id }).updates(
 			query.withOverride((curr) => curr.filter((t) => t.id !== transaction.id))
 		);
+
 		if (!result.success) {
 			switch (result.code) {
 				case 'Unauthorized':
@@ -34,6 +35,7 @@
 			}
 			return;
 		}
+
 		toast.success('Transaction deleted successfully.');
 	}
 </script>
@@ -49,6 +51,6 @@
 		>
 			{transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)} DA
 		</div>
-		<HoldDeleteButton onDelete={handleDelete} ariaLabel="Hold to delete transaction" />
+		<HoldDeleteButton {onDelete} />
 	</div>
 </div>

@@ -3,7 +3,7 @@
 	import type { RemoteQuery } from '@sveltejs/kit';
 
 	import { Minus } from '@lucide/svelte';
-	import { beforeNavigate } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 
 	import type { Transaction } from '@/schemas/transaction.schema';
 
@@ -30,10 +30,6 @@
 	const { query, selectedDate }: Props = $props();
 
 	let open = $state(false);
-
-	beforeNavigate(() => {
-		open = false;
-	});
 </script>
 
 <Dialog bind:open>
@@ -50,20 +46,7 @@
 			<DialogTitle>Add Spending</DialogTitle>
 			<DialogDescription>Record an expense</DialogDescription>
 		</DialogHeader>
-		<form
-			{...createTransactionForm
-				.preflight(createTransactionSchema)
-				.enhance(async ({ submit, data }) => {
-					const newTx = {
-						id: crypto.randomUUID(),
-						...data,
-						madeAt: new Date(data.madeAt),
-					};
-					await submit().updates(query.withOverride((curr) => [...curr, newTx]));
-				})}
-			oninput={() => createTransactionForm.validate()}
-			class="grid gap-4"
-		>
+		<form {...createTransactionForm.preflight(createTransactionSchema)} class="grid gap-4">
 			<div class="grid gap-2">
 				<Label for="sp-amount">Amount</Label>
 				<Input {...createTransactionForm.fields.amount.as('number')} placeholder="0 DA" />
@@ -84,9 +67,24 @@
 			<Input {...createTransactionForm.fields.type.as('hidden', 'spending')} />
 			<Input {...createTransactionForm.fields.madeAt.as('hidden', selectedDate.toString())} />
 			<DialogFooter>
-				<Button {...createTransactionForm.buttonProps} variant="outline"
-					>Add Spending</Button
+				<Button
+					variant="outline"
+					{...createTransactionForm.buttonProps.enhance(
+						async ({ submit, data, form }) => {
+							const newTx = {
+								id: crypto.randomUUID(),
+								...data,
+								madeAt: new Date(data.madeAt),
+							};
+							await submit().updates(query.withOverride((curr) => [...curr, newTx]));
+							open = false;
+							form.reset();
+							toast.success('Transaction created successfully.');
+						}
+					)}
 				>
+					Add Spending
+				</Button>
 			</DialogFooter>
 		</form>
 	</DialogContent>
